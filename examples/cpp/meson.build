@@ -1,4 +1,4 @@
-# /examples/meson.build
+# /examples/cpp/meson.build
 #
 # Meson build file for C++ examples
 #
