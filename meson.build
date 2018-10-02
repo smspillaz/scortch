@@ -34,9 +34,12 @@ glib = dependency('glib-2.0')
 gobject = dependency('gobject-2.0')
 
 py_installation_path = get_option('python_installation')
+py_version = get_option('python_version')
 
-if py_installation_path == ''
-  py_installation_path = python.find_installation('python3').get_install_dir()
+if py_installation_path == '' or py_version == ''
+  py_installation = python.find_installation('python3')
+  py_installation_path = py_installation.get_install_dir()
+  py_version = py_installation.language_version()
 endif
 
 torch_dir = join_paths([py_installation_path,
@@ -58,7 +61,7 @@ py_include_path = join_paths([py_installation_path,
                               '..',
                               '..',
                               'include',
-                              'python3.6m'])
+                              'python' + py_version + 'm'])
 
 torch_includes = include_directories(torch_lib_include_path,
                                      torch_include_path,

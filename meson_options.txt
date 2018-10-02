@@ -1,1 +1,2 @@
 option('python_installation', type: 'string')
+option('python_version', type: 'string')
