@@ -41,14 +41,40 @@ typedef struct _ScortchLocalTensorPrivate {
 
 G_DEFINE_TYPE_WITH_PRIVATE (ScortchLocalTensor, scortch_local_tensor, G_TYPE_OBJECT);
 
+namespace
+{
+  template <typename T>
+  void safe_delete (T *t)
+  {
+    delete t;
+  }
+}
+
+static void
+scortch_local_tensor_finalize (GObject *object)
+{
+  ScortchLocalTensor *local_tensor = SCORTCH_LOCAL_TENSOR (object);
+  ScortchLocalTensorPrivate *priv =
+    static_cast <ScortchLocalTensorPrivate *> (scortch_local_tensor_get_instance_private (local_tensor));
+
+  g_clear_pointer (&priv->tensor, (GDestroyNotify) safe_delete <torch::Tensor>);
+}
+
 static void
 scortch_local_tensor_class_init (ScortchLocalTensorClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->finalize = scortch_local_tensor_finalize;
 }
 
 static void
 scortch_local_tensor_init (ScortchLocalTensor *local_tensor)
 {
+  ScortchLocalTensorPrivate *priv =
+    static_cast <ScortchLocalTensorPrivate *> (scortch_local_tensor_get_instance_private (local_tensor));
+
+  priv->tensor = new torch::Tensor ();
 }
 
 ScortchLocalTensor *
