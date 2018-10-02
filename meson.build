@@ -85,5 +85,13 @@ caffe2_detectron_ops_gpu = cpp_compiler.find_library('libcaffe2_detectron_ops_gp
                                                      dirs: torch_lib_path,
                                                      required: false)
 
+gtest_project = subproject('googletest')
+gtest_dep = gtest_project.get_variable('gtest_dep')
+gtest_main_dep = gtest_project.get_variable('gtest_main_dep')
+gmock_dep = gtest_project.get_variable('gmock_dep')
+
+tests_inc = include_directories('tests')
+
 subdir('scortch')
 subdir('examples')
+subdir('tests')
