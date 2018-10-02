@@ -141,7 +141,12 @@ scortch_local_tensor_set_dimensions (ScortchLocalTensor *local_tensor,
   g_clear_pointer (&priv->dimension_list, (GDestroyNotify) g_array_unref);
   priv->dimension_list = dimensionality != nullptr ?
     g_variant_ref (dimensionality) : single_dimensional_empty_tensor ();
-  priv->tensor->resize_ (torch::IntList (int_list_from_g_variant (priv->dimension_list)));
+
+  /* We can't set the dimensions until the underlying tensor is constructed */
+  if (priv->tensor != nullptr)
+    {
+      priv->tensor->resize_ (torch::IntList (int_list_from_g_variant (priv->dimension_list)));
+    }
 }
 
 static void
