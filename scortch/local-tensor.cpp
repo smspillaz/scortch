@@ -160,7 +160,7 @@ scortch_local_tensor_get_property (GObject    *object,
   switch (prop_id)
     {
       case PROP_DIMENSIONS:
-        g_value_set_boxed (value, scortch_local_tensor_get_dimensions (local_tensor));
+        g_value_set_variant (value, scortch_local_tensor_get_dimensions (local_tensor));
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
