@@ -36,6 +36,18 @@ namespace {
     EXPECT_THAT (tensor, Not(IsNull()));
   }
 
+  TEST (ScortchLocalTensor, initial_size) {
+    g_autoptr(ScortchLocalTensor) tensor = scortch_local_tensor_new ();
+
+    size_t n_dimensions;
+    int64_t const *dimensions =
+      static_cast <int64_t const *> (g_variant_get_fixed_array (scortch_local_tensor_get_dimensions (tensor),
+                                                                &n_dimensions,
+                                                                sizeof (int64_t)));
+    EXPECT_THAT (std::vector <int64_t> (dimensions, dimensions + n_dimensions),
+                 ElementsAre (0));
+  }
+
   TEST (ScortchLocalTensor, resize) {
     g_autoptr(ScortchLocalTensor) tensor = scortch_local_tensor_new ();
     g_autoptr(GArray) array = g_array_sized_new (true, true, sizeof (int64_t), 1);
