@@ -63,9 +63,9 @@ py_include_path = join_paths([py_installation_path,
                               'include',
                               'python' + py_version + 'm'])
 
-torch_includes = include_directories(torch_lib_include_path,
-                                     torch_include_path,
-                                     py_include_path)
+torch_inc = include_directories(torch_lib_include_path,
+                                torch_include_path,
+                                py_include_path)
 torch_lib_path = join_paths([torch_dir, 'lib'])
 torch = cpp_compiler.find_library('libtorch',
                                   dirs: torch_lib_path)

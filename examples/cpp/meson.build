@@ -34,5 +34,5 @@ example = executable(
     caffe2_observers,
     torch
   ],
-  include_directories: [ cxxopts_inc, torch_includes ]
+  include_directories: [ cxxopts_inc, torch_inc ]
 )
