@@ -65,10 +65,10 @@ namespace {
     return contexts;
   }
 
-  const std::unordered_map<std::string, long long>
+  const std::unordered_map<std::string, int64_t>
   make_dictionary(std::vector<std::string> const &words) {
-    std::unordered_map<std::string, long long> dictionary;
-    long long count = 0;
+    std::unordered_map<std::string, int64_t> dictionary;
+    int64_t count = 0;
 
     for (size_t i = 0; i < words.size(); ++i) {
       if (dictionary.find(words[i]) == dictionary.end()) {
@@ -103,10 +103,10 @@ namespace {
     torch::nn::Linear fc2{nullptr};
   };
 
-  std::vector<long long>
-  words_to_indices(std::unordered_map<std::string, long long> const &vocab,
+  std::vector<int64_t>
+  words_to_indices(std::unordered_map<std::string, int64_t> const &vocab,
                    std::vector<std::string>  const &words) {
-    std::vector<long long> indices;
+    std::vector<int64_t> indices;
     indices.reserve(words.size());
 
     for (auto const &word : words) {
@@ -119,7 +119,7 @@ namespace {
   template<typename T>
   torch::Tensor
   make_tensor_from_vector(std::vector<T> const &vec) {
-    auto tensor = torch::full({static_cast<long long>(vec.size())}, 0, torch::kInt64);
+    auto tensor = torch::full({static_cast<int64_t>(vec.size())}, 0, torch::kInt64);
 
     for (size_t i = 0; i < vec.size(); ++i) {
       tensor[i] = torch::Scalar(vec[i]);
@@ -137,7 +137,7 @@ namespace {
   }
 
   void train_cbow_language_modeller(CBOWLanguageModeller &model,
-                                    std::unordered_map<std::string, long long> const &vocab,
+                                    std::unordered_map<std::string, int64_t> const &vocab,
                                     std::vector<std::tuple<std::string, std::vector<std::string>>> const &context,
                                     size_t epochs,
                                     float learning_rate) {
@@ -173,8 +173,8 @@ namespace {
 
   std::tuple<std::string, float>
   predict_word(CBOWLanguageModeller &model,
-               std::unordered_map<std::string, long long> const &in_vocab,
-               std::unordered_map<long long, std::string> const &out_vocab,
+               std::unordered_map<std::string, int64_t> const &in_vocab,
+               std::unordered_map<int64_t, std::string> const &out_vocab,
                std::vector<std::string> const &context) {
     torch::NoGradGuard guard{};
     auto context_indices(make_tensor_from_vector(words_to_indices(in_vocab,
@@ -184,14 +184,14 @@ namespace {
 
     std::tie(value, index) = torch::max(torch::exp(prediction), 1);
 
-    return std::make_tuple(out_vocab.find(*(index.template data<long long>()))->second,
+    return std::make_tuple(out_vocab.find(*(index.template data<int64_t>()))->second,
                            *value.template data<float>());
   }
 
   std::string
   format_word_prediction_for(CBOWLanguageModeller &model,
-                             std::unordered_map<std::string, long long> const &in_vocab,
-                             std::unordered_map<long long, std::string> const &out_vocab,
+                             std::unordered_map<std::string, int64_t> const &in_vocab,
+                             std::unordered_map<int64_t, std::string> const &out_vocab,
                              std::vector<std::string> const &context)
   {
     std::stringstream ss;
