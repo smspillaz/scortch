@@ -23,12 +23,17 @@
 
 #pragma once
 
+#include <glib.h>
 #include <glib-object.h>
 
 G_BEGIN_DECLS
 
 #define SCORTCH_TYPE_LOCAL_TENSOR scortch_local_tensor_get_type ()
 G_DECLARE_FINAL_TYPE (ScortchLocalTensor, scortch_local_tensor, SCORTCH, LOCAL_TENSOR, GObject)
+
+GArray * scortch_local_tensor_get_dimensions (ScortchLocalTensor *local_tensor);
+void scortch_local_tensor_set_dimensions (ScortchLocalTensor *local_tensor,
+                                          GArray             *dimensions);
 
 ScortchLocalTensor * scortch_local_tensor_new (void);
 

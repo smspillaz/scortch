@@ -34,4 +34,15 @@ namespace {
 
     EXPECT_THAT (tensor, Not(IsNull()));
   }
+
+  TEST (ScortchLocalTensor, resize) {
+    g_autoptr(ScortchLocalTensor) tensor = scortch_local_tensor_new ();
+    g_autoptr(GArray) array = g_array_sized_new (true, true, sizeof (int64_t), 1);
+
+    int64_t value = 2;
+    g_array_append_val (array, value);
+
+    scortch_local_tensor_set_dimensions (tensor, array);
+    EXPECT_THAT (tensor, Not(IsNull()));
+  }
 }
