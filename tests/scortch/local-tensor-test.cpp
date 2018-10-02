@@ -25,6 +25,7 @@
 
 #include <scortch/local-tensor.h>
 
+using ::testing::ElementsAre;
 using ::testing::IsNull;
 using ::testing::Not;
 
@@ -49,6 +50,13 @@ namespace {
                                  sizeof (int64_t));
 
     scortch_local_tensor_set_dimensions (tensor, array_variant);
-    EXPECT_THAT (tensor, Not(IsNull()));
+
+    size_t n_dimensions;
+    int64_t const *dimensions =
+      static_cast <int64_t const *> (g_variant_get_fixed_array (scortch_local_tensor_get_dimensions (tensor),
+                                                                &n_dimensions,
+                                                                sizeof (int64_t)));
+    EXPECT_THAT (std::vector <int64_t> (dimensions, dimensions + n_dimensions),
+                 ElementsAre (2));
   }
 }
