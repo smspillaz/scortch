@@ -1,6 +1,6 @@
-# /tests/meson.build
+# /tests/js/meson.build
 #
-# Meson build file for tests.
+# Meson build file for the javascript tests.
 #
 # Copyright (C) 2018 Sam Spilsbury.
 #
@@ -18,5 +18,4 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-subdir('js')
 subdir('scortch')
