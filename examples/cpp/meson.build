@@ -28,10 +28,10 @@ example = executable(
     gobject,
     aten,
     caffe2,
-    caffe2_gpu,
-    caffe2_observers,
-    caffe2_module_test_dynamic,
     caffe2_detectron_ops_gpu,
+    caffe2_gpu,
+    caffe2_module_test_dynamic,
+    caffe2_observers,
     torch
   ],
   include_directories: [ cxxopts_inc, torch_includes ]
