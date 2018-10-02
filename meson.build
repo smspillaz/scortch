@@ -70,17 +70,20 @@ torch_lib_path = join_paths([torch_dir, 'lib'])
 torch = cpp_compiler.find_library('libtorch',
                                   dirs: torch_lib_path)
 aten = cpp_compiler.find_library('libATen',
-                                 dirs: torch_lib_path)
+                                 dirs: torch_lib_path,
+                                 required: false)
 caffe2 = cpp_compiler.find_library('libcaffe2',
                                    dirs: torch_lib_path)
 caffe2_gpu = cpp_compiler.find_library('libcaffe2_gpu',
-                                       dirs: torch_lib_path)
+                                       dirs: torch_lib_path,
+                                       required: false)
 caffe2_observers = cpp_compiler.find_library('libcaffe2_observers',
                                              dirs: torch_lib_path)
 caffe2_module_test_dynamic = cpp_compiler.find_library('libcaffe2_module_test_dynamic',
                                                        dirs: torch_lib_path)
 caffe2_detectron_ops_gpu = cpp_compiler.find_library('libcaffe2_detectron_ops_gpu',
-                                                     dirs: torch_lib_path)
+                                                     dirs: torch_lib_path,
+                                                     required: false)
 
 subdir('scortch')
 subdir('examples')
