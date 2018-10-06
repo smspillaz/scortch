@@ -18,6 +18,8 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+cxxopts_inc = include_directories('third_party/cxxopts/include')
+
 example = executable(
   'predict-words',
   ['predict-words.cpp'],
@@ -32,5 +34,5 @@ example = executable(
     caffe2_detectron_ops_gpu,
     torch
   ],
-  include_directories: [ torch_includes ]
+  include_directories: [ cxxopts_inc, torch_includes ]
 )
