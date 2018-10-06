@@ -43,20 +43,20 @@ namespace {
     return words;
   }
 
-  template<int N>
-  const std::vector<std::tuple<std::string, std::array<std::string, N * 2>>>
-  make_context_vector(std::vector <std::string> const &words) {
-    std::vector <std::tuple<std::string, std::array<std::string, N * 2> > > contexts;
+  const std::vector<std::tuple<std::string, std::vector<std::string>>>
+  make_context_vector(std::vector <std::string> const &words, size_t n) {
+    std::vector <std::tuple<std::string, std::vector<std::string>>> contexts;
 
-    for (size_t i = N; i < words.size() - N; ++i) {
-      std::array<std::string, N * 2> context;
+    for (size_t i = n; i < words.size() - n; ++i) {
+      std::vector<std::string> context;
+      context.reserve(n * 2);
 
-      for (size_t j = 1; j < N + 1; ++j) {
-        context[((N + 1) - j) - 1] = words[i - j];
+      for (size_t j = 1; j < n + 1; ++j) {
+        context.emplace_back(words[i - j]);
       }
 
-      for (size_t j = 1; j < N + 1; ++j) {
-        context[N + j - 1] = words[i + j];
+      for (size_t j = 1; j < n + 1; ++j) {
+        context.emplace_back(words[i + j]);
       }
 
       contexts.emplace_back(std::make_tuple(words[i], std::move(context)));
@@ -82,12 +82,13 @@ namespace {
   struct CBOWLanguageModeller: torch::nn::Module {
     CBOWLanguageModeller(size_t vocab_size,
                          size_t embedding_dim,
+                         size_t fully_connected_layer_dim,
                          size_t context_size) :
       embedding(register_module("embedding",
                                 torch::nn::Embedding(vocab_size, embedding_dim))),
       fc1(register_module("fc1", torch::nn::Linear(embedding_dim * context_size * 2,
-                                                   128))),
-      fc2(register_module("fc2", torch::nn::Linear(128, vocab_size)))
+                                                   fully_connected_layer_dim))),
+      fc2(register_module("fc2", torch::nn::Linear(fully_connected_layer_dim, vocab_size)))
     {
     }
 
@@ -102,10 +103,9 @@ namespace {
     torch::nn::Linear fc2{nullptr};
   };
 
-  template <typename WordArray>
   std::vector<long long>
   words_to_indices(std::unordered_map<std::string, long long> const &vocab,
-                   WordArray const &words) {
+                   std::vector<std::string>  const &words) {
     std::vector<long long> indices;
     indices.reserve(words.size());
 
@@ -136,10 +136,9 @@ namespace {
     return v;
   }
 
-  template<typename Context>
   void train_cbow_language_modeller(CBOWLanguageModeller &model,
                                     std::unordered_map<std::string, long long> const &vocab,
-                                    Context const &context,
+                                    std::vector<std::tuple<std::string, std::vector<std::string>>> const &context,
                                     size_t epochs,
                                     float learning_rate) {
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(learning_rate));
@@ -172,15 +171,14 @@ namespace {
     return reversed;
   }
 
-  template <typename Context>
   std::tuple<std::string, float>
   predict_word(CBOWLanguageModeller &model,
                std::unordered_map<std::string, long long> const &in_vocab,
                std::unordered_map<long long, std::string> const &out_vocab,
-               Context const &context) {
+               std::vector<std::string> const &context) {
     torch::NoGradGuard guard{};
     auto context_indices(make_tensor_from_vector(words_to_indices(in_vocab,
-                                                                  std::get<1>(context))));
+                                                                  context)));
     auto prediction = model.forward(context_indices);
     torch::Tensor value, index;
 
@@ -190,12 +188,11 @@ namespace {
                            *value.template data<float>());
   }
 
-  template <typename Context>
   std::string
   format_word_prediction_for(CBOWLanguageModeller &model,
                              std::unordered_map<std::string, long long> const &in_vocab,
                              std::unordered_map<long long, std::string> const &out_vocab,
-                             Context const &context)
+                             std::vector<std::string> const &context)
   {
     std::stringstream ss;
     std::string word;
@@ -213,25 +210,52 @@ namespace {
 }
 
 int main(int argc, char **argv) {
+  // Parse arguments
+  cxxopts::Options options("predict-words", "Predict words in a string");
+
+  options.add_options()
+    ("c,context-window", "Context window size",
+     cxxopts::value<unsigned int>()->default_value("2"))
+    ("e,epochs", "Number of epochs to run for",
+     cxxopts::value<unsigned int>()->default_value("50"))
+    ("l,learning-rate", "Learning rate",
+     cxxopts::value<float>()->default_value("0.1"))
+    ("s,sentence", "Training sentence",
+     cxxopts::value<std::string>()->default_value(std::string(test_sentence)))
+    ("d,embedding-dimensions", "Embedding dimensions",
+     cxxopts::value<unsigned int>()->default_value("10"))
+    ("f,fully-connected-layer-dimensions", "Fully connected layer dimensions",
+     cxxopts::value<unsigned int>()->default_value("128"));
+  auto result = options.parse(argc, argv);
+
   // Construct vocabulary
-  auto words = split_string(std::string(test_sentence), ' ');
-  auto context = make_context_vector<2>(words);
+  auto context_window = result["context-window"].as<unsigned int>();
+  auto words = split_string(result["sentence"].as<std::string>(), ' ');
+  auto context = make_context_vector(words,
+                                     context_window);
   auto vocab = make_dictionary(words);
   auto indices_to_words = reverse_map(vocab);
 
   // Create a new Net.
-  CBOWLanguageModeller model(vocab.size(), 10, 2);
+  CBOWLanguageModeller model(vocab.size(),
+                             result["embedding-dimensions"].as<unsigned int>(),
+                             result["fully-connected-layer-dimensions"].as<unsigned int>(),
+                             context_window);
 
   // Instantiate an SGD optimization algorithm to update our Net's parameters.
   torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(0.1));
 
-  train_cbow_language_modeller(model, vocab, context, 50, 0.01);
+  train_cbow_language_modeller(model,
+                               vocab,
+                               context,
+                               result["epochs"].as<unsigned int>(),
+                               result["learning-rate"].as<float>());
 
-  for (size_t i = 2; i < words.size() - 2; ++i) {
+  for (size_t i = context_window; i < words.size() - context_window; ++i) {
     std::cout << format_word_prediction_for(model,
                                             vocab,
                                             indices_to_words,
-                                            context[i - 2]) << " ";
+                                            std::get<1>(context[i - context_window])) << " ";
   }
 
   std::cout << "\n";
