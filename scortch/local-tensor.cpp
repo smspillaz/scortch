@@ -186,6 +186,8 @@ scortch_local_tensor_finalize (GObject *object)
 
   g_clear_pointer (&priv->tensor, (GDestroyNotify) safe_delete <torch::Tensor>);
   g_clear_pointer (&priv->dimension_list, (GDestroyNotify) g_array_unref);
+
+  G_OBJECT_CLASS (scortch_local_tensor_parent_class)->finalize (object);
 }
 
 static void
