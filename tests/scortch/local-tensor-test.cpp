@@ -42,7 +42,13 @@ namespace {
     int64_t value = 2;
     g_array_append_val (array, value);
 
-    scortch_local_tensor_set_dimensions (tensor, array);
+    g_autoptr(GVariant) array_variant =
+      g_variant_new_fixed_array (G_VARIANT_TYPE ("x"),
+                                 static_cast <gconstpointer> (array->data),
+                                 array->len,
+                                 sizeof (int64_t));
+
+    scortch_local_tensor_set_dimensions (tensor, array_variant);
     EXPECT_THAT (tensor, Not(IsNull()));
   }
 }

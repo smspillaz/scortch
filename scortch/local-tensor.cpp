@@ -40,7 +40,7 @@ struct _ScortchLocalTensor
 typedef struct _ScortchLocalTensorPrivate {
   torch::Tensor *tensor;
 
-  GArray *dimension_list; /* element-type: gint64 */
+  GVariant *dimension_list; /* signature: ax */
 } ScortchLocalTensorPrivate;
 
 enum {
@@ -64,24 +64,30 @@ namespace
    *      because at::List doesn't make a copy of the underlying
    *      memory, and the constructor does not take an rvalue
    *      reference, so the move never happens. */
-  std::vector<int64_t> int_list_from_g_array (GArray *array)
+  std::vector<int64_t> int_list_from_g_variant (GVariant *variant)
   {
     std::vector <int64_t> vec;
-    vec.reserve (array->len);
+    size_t n_elements;
+    int64_t const *fixed_array =
+      static_cast <int64_t const *> (g_variant_get_fixed_array (variant,
+                                                                &n_elements,
+                                                                sizeof (int64_t)));
+    vec.reserve (n_elements);
 
-    for (size_t i = 0; i < array->len; ++i)
-      vec.push_back (g_array_index (array, int64_t, i));
+    for (size_t i = 0; i < n_elements; ++i)
+      vec.push_back (fixed_array[i]);
 
     return vec;
   }
 
-  GArray * single_dimensional_empty_tensor ()
+  GVariant * single_dimensional_empty_tensor ()
   {
-    GArray *array = g_array_sized_new (true, true, sizeof (int64_t), 1);
+    g_auto(GVariantBuilder) builder;
 
-    int64_t value = 1;
-    g_array_append_val (array, value);
-    return array;
+    g_variant_builder_init (&builder, G_VARIANT_TYPE ("ax"));
+    g_variant_builder_add (&builder, "x", 0);
+
+    return g_variant_builder_end (&builder);
   }
 }
 
@@ -96,10 +102,10 @@ namespace
  * elements in the array. For instance, a Tensor with dimension
  * [3, 4, 5] has 3 rows, 4 columns and 5 stacks.
  *
- * Returns: (transfer none) (element-type gint64): A #GArray of integer
+ * Returns: (transfer none): A #GVariant of integer
  *          values representing the dimensionality of the array.
  */
-GArray *
+GVariant *
 scortch_local_tensor_get_dimensions (ScortchLocalTensor *local_tensor)
 {
   ScortchLocalTensorPrivate *priv =
@@ -111,8 +117,8 @@ scortch_local_tensor_get_dimensions (ScortchLocalTensor *local_tensor)
 /**
  * scortch_local_tensor_set_dimensions:
  * @local_tensor: A #ScortchLocalTensor
- * @dimensions: (element-type gint64): A #GArray of integer values
- *              representing the dimensionality of the array.
+ * @dimensions: A #GVariant of integer values
+ *               representing the dimensionality of the array.
  *
  * Set the dimensionality of the tensor in the form of an array
  * of integer values. If the change in dimensionality results
@@ -127,15 +133,15 @@ scortch_local_tensor_get_dimensions (ScortchLocalTensor *local_tensor)
  */
 void
 scortch_local_tensor_set_dimensions (ScortchLocalTensor *local_tensor,
-                                     GArray             *dimensionality)
+                                     GVariant           *dimensionality)
 {
   ScortchLocalTensorPrivate *priv =
     static_cast <ScortchLocalTensorPrivate *> (scortch_local_tensor_get_instance_private (local_tensor));
 
   g_clear_pointer (&priv->dimension_list, (GDestroyNotify) g_array_unref);
   priv->dimension_list = dimensionality != nullptr ?
-    g_array_ref (dimensionality) : single_dimensional_empty_tensor ();
-  priv->tensor->resize_ (torch::IntList (int_list_from_g_array (priv->dimension_list)));
+    g_variant_ref (dimensionality) : single_dimensional_empty_tensor ();
+  priv->tensor->resize_ (torch::IntList (int_list_from_g_variant (priv->dimension_list)));
 }
 
 static void
@@ -169,12 +175,24 @@ scortch_local_tensor_set_property (GObject      *object,
     {
       case PROP_DIMENSIONS:
         scortch_local_tensor_set_dimensions (local_tensor,
-                                             static_cast <GArray *> (g_value_get_boxed (value)));
+                                             g_value_get_variant (value));
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
     }
+}
+
+static void
+scortch_local_tensor_constructed (GObject *object)
+{
+  ScortchLocalTensor *local_tensor = SCORTCH_LOCAL_TENSOR (object);
+  ScortchLocalTensorPrivate *priv =
+    static_cast <ScortchLocalTensorPrivate *> (scortch_local_tensor_get_instance_private (local_tensor));
+
+  priv->tensor = new torch::Tensor (torch::zeros (torch::IntList (int_list_from_g_variant (priv->dimension_list))));
+
+  G_OBJECT_CLASS (scortch_local_tensor_parent_class)->constructed (object);
 }
 
 static void
@@ -185,7 +203,7 @@ scortch_local_tensor_finalize (GObject *object)
     static_cast <ScortchLocalTensorPrivate *> (scortch_local_tensor_get_instance_private (local_tensor));
 
   g_clear_pointer (&priv->tensor, (GDestroyNotify) safe_delete <torch::Tensor>);
-  g_clear_pointer (&priv->dimension_list, (GDestroyNotify) g_array_unref);
+  g_clear_pointer (&priv->dimension_list, (GDestroyNotify) g_variant_unref);
 
   G_OBJECT_CLASS (scortch_local_tensor_parent_class)->finalize (object);
 }
@@ -195,12 +213,13 @@ scortch_local_tensor_class_init (ScortchLocalTensorClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->constructed = scortch_local_tensor_constructed;
   object_class->get_property = scortch_local_tensor_get_property;
   object_class->set_property = scortch_local_tensor_set_property;
   object_class->finalize = scortch_local_tensor_finalize;
 
   /**
-   * ScortchLocalTensor:dimensions: (type GArray(gint64))
+   * ScortchLocalTensor:dimensions:
    *
    * The dimensions of the tensor.
    *
@@ -210,22 +229,18 @@ scortch_local_tensor_class_init (ScortchLocalTensorClass *klass)
    */
   g_object_class_install_property (object_class,
                                    PROP_DIMENSIONS,
-                                   g_param_spec_boxed ("dimensions",
-                                                       "Dimensions",
-                                                       "Dimensions of the Tensor",
-                                                       G_TYPE_ARRAY,
-                                                       G_PARAM_READWRITE));
+                                   g_param_spec_variant ("dimensions",
+                                                         "Dimensions",
+                                                         "Dimensions of the Tensor",
+                                                         G_VARIANT_TYPE ("ax"),
+                                                         single_dimensional_empty_tensor (),
+                                                         static_cast <GParamFlags> (G_PARAM_READWRITE |
+                                                                                    G_PARAM_CONSTRUCT)));
 }
 
 static void
 scortch_local_tensor_init (ScortchLocalTensor *local_tensor)
 {
-  ScortchLocalTensorPrivate *priv =
-    static_cast <ScortchLocalTensorPrivate *> (scortch_local_tensor_get_instance_private (local_tensor));
-
-  priv->dimension_list = priv->dimension_list != nullptr ?
-    priv->dimension_list : single_dimensional_empty_tensor ();
-  priv->tensor = new torch::Tensor (torch::zeros (torch::IntList (int_list_from_g_array (priv->dimension_list))));
 }
 
 ScortchLocalTensor *
