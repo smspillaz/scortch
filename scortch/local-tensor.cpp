@@ -197,6 +197,15 @@ scortch_local_tensor_class_init (ScortchLocalTensorClass *klass)
   object_class->set_property = scortch_local_tensor_set_property;
   object_class->finalize = scortch_local_tensor_finalize;
 
+  /**
+   * ScortchLocalTensor:dimensions: (type GArray(gint64))
+   *
+   * The dimensions of the tensor.
+   *
+   * Arrays can be N-dimensional, as indicated by the number of
+   * elements in the array. For instance, a Tensor with dimension
+   * [3, 4, 5] has 3 rows, 4 columns and 5 stacks.
+   */
   g_object_class_install_property (object_class,
                                    PROP_DIMENSIONS,
                                    g_param_spec_boxed ("dimensions",
