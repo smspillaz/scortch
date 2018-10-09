@@ -22,6 +22,7 @@ javascript_tests = [
   'testLocalTensor.js'
 ]
 
+gjs = find_program('gjs', required: false)
 jasmine = find_program('jasmine', required: false)
 include_path = '@0@:@1@'.format(meson.source_root(), meson.build_root())
 built_library_path = join_paths(meson.build_root(), meson.project_name())
@@ -34,8 +35,11 @@ tests_environment.prepend('LD_LIBRARY_PATH', built_library_path)
 if jasmine.found()
   foreach test_file : javascript_tests
     test(test_file,
-         jasmine,
-         args: [join_paths(meson.current_source_dir(), test_file)],
+         gjs,
+         args: [
+           jasmine.path(),
+           join_paths(meson.current_source_dir(), test_file)
+         ],
          env: tests_environment)
   endforeach
 endif
