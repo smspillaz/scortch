@@ -31,6 +31,7 @@ tests_environment = environment()
 tests_environment.set('GJS_PATH', include_path)
 tests_environment.prepend('GI_TYPELIB_PATH', built_library_path)
 tests_environment.prepend('LD_LIBRARY_PATH', built_library_path)
+tests_environment.prepend('DYLD_LIBRARY_PATH', built_library_path)
 
 if jasmine.found()
   foreach test_file : javascript_tests
