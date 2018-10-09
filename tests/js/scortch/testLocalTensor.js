@@ -30,19 +30,19 @@ describe('ScortchLocalTensor', function() {
   it('has default dimension of 0', function() {
     let local_tensor = new Scortch.LocalTensor({});
 
-    expect(local_tensor.dimensions.unpack()).toBe([0]);
+    expect(local_tensor.dimensions.deep_unpack()).toEqual([0]);
   });
 
   it('can be constructed with a dimension', function() {
     let local_tensor = new Scortch.LocalTensor({ dimensions: new GLib.Variant('ax', [2]) });
 
-    expect(local_tensor.dimensions.unpack()).toBe([2]);
+    expect(local_tensor.dimensions.deep_unpack()).toEqual([2]);
   });
 
   it('can be resized', function() {
     let local_tensor = new Scortch.LocalTensor({});
 
     local_tensor.resize(new GLib.Variant('ax', [2, 3]));
-    expect(local_tensor.dimensions.unpack()).toBe([2, 3]);
+    expect(local_tensor.dimensions.deep_unpack()).toEqual([2, 3]);
   });
 });
