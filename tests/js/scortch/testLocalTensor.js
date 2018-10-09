@@ -42,7 +42,7 @@ describe('ScortchLocalTensor', function() {
   it('can be resized', function() {
     let local_tensor = new Scortch.LocalTensor({});
 
-    local_tensor.resize(new GLib.Variant('ax', [2, 3]));
+    local_tensor.set_dimensions(new GLib.Variant('ax', [2, 3]));
     expect(local_tensor.dimensions.deep_unpack()).toEqual([2, 3]);
   });
 });
