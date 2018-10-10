@@ -21,10 +21,12 @@
 api_version = '0'
 
 scortch_toplevel_headers = files([
-  'local-tensor.h'
+  'local-tensor.h',
+  'scortch-errors.h'
 ])
 scortch_introspectable_sources = files([
-  'local-tensor.cpp'
+  'local-tensor.cpp',
+  'scortch-errors.cpp'
 ])
 scortch_private_headers = files([
 ])
