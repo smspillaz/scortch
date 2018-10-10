@@ -31,6 +31,10 @@ G_BEGIN_DECLS
 #define SCORTCH_TYPE_LOCAL_TENSOR scortch_local_tensor_get_type ()
 G_DECLARE_FINAL_TYPE (ScortchLocalTensor, scortch_local_tensor, SCORTCH, LOCAL_TENSOR, GObject)
 
+GVariant * scortch_local_tensor_get_data (ScortchLocalTensor *local_tensor);
+void scortch_local_tensor_set_data (ScortchLocalTensor *local_tensor,
+                                    GVariant           *data);
+
 GVariant * scortch_local_tensor_get_dimensions (ScortchLocalTensor *local_tensor);
 void scortch_local_tensor_set_dimensions (ScortchLocalTensor *local_tensor,
                                           GVariant           *dimensions);

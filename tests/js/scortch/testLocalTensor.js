@@ -45,4 +45,13 @@ describe('ScortchLocalTensor', function() {
     local_tensor.dimensions = new GLib.Variant('ax', [2, 3]);
     expect(local_tensor.dimensions.deep_unpack()).toEqual([2, 3]);
   });
+
+  it('can have data set on construction', function() {
+    let local_tensor = new Scortch.LocalTensor({
+      dimensions: new GLib.Variant('ax', [2]),
+      data: new GLib.Variant('av', [new GLib.Variant('ax', [1, 2])])
+    });
+
+    expect(local_tensor.data.deep_unpack()).toEqual([1, 2]);
+  });
 });
