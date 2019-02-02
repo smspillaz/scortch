@@ -86,6 +86,8 @@ caffe2_module_test_dynamic = cpp_compiler.find_library('libcaffe2_module_test_dy
 caffe2_detectron_ops_gpu = cpp_compiler.find_library('libcaffe2_detectron_ops_gpu',
                                                      dirs: torch_lib_path,
                                                      required: false)
+shm = cpp_compiler.find_library('libshm',
+                                dirs: torch_lib_path)
 
 gtest_project = subproject('googletest')
 gtest_dep = gtest_project.get_variable('gtest_dep')

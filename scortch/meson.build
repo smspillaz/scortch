@@ -56,6 +56,7 @@ scortch_lib = shared_library(
     caffe2_observers,
     glib,
     gobject,
+    shm,
     torch
   ]
 )
