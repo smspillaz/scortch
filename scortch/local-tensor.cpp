@@ -28,7 +28,6 @@
 #include <gobject/gobject.h>
 
 #include <torch/torch.h>
-#include <torch/script.h>
 
 #include <scortch/local-tensor.h>
 

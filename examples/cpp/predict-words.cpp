@@ -1,7 +1,6 @@
 #include <cxxopts.hpp>
 
 #include <torch/torch.h>
-#include <torch/script.h>
 
 #include <algorithm>
 #include <array>
