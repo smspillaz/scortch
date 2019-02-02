@@ -72,6 +72,8 @@ torch = cpp_compiler.find_library('libtorch',
 aten = cpp_compiler.find_library('libATen',
                                  dirs: torch_lib_path,
                                  required: false)
+c10 = cpp_compiler.find_library('libc10',
+                                dirs: torch_lib_path)
 caffe2 = cpp_compiler.find_library('libcaffe2',
                                    dirs: torch_lib_path)
 caffe2_gpu = cpp_compiler.find_library('libcaffe2_gpu',

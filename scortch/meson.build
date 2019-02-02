@@ -48,6 +48,7 @@ scortch_lib = shared_library(
   include_directories: [ scortch_inc, torch_inc ],
   dependencies: [
     aten,
+    c10,
     caffe2,
     caffe2_detectron_ops_gpu,
     caffe2_gpu,

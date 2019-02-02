@@ -27,6 +27,7 @@ example = executable(
     glib,
     gobject,
     aten,
+    c10,
     caffe2,
     caffe2_detectron_ops_gpu,
     caffe2_gpu,
