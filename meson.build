@@ -46,7 +46,6 @@ torch_dir = join_paths([py_installation_path,
                         'torch'])
 torch_lib_include_path = join_paths([py_installation_path,
                                      'torch',
-                                     'lib',
                                      'include',
                                      'torch',
                                      'csrc',
@@ -54,7 +53,6 @@ torch_lib_include_path = join_paths([py_installation_path,
                                      'include'])
 torch_include_path = join_paths([py_installation_path,
                                  'torch',
-                                 'lib',
                                  'include'])
 py_include_path = join_paths([py_installation_path,
                               '..',
