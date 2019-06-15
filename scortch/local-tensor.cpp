@@ -64,7 +64,7 @@ namespace
   }
 
   /* XXX: Its not entirely clear to me why,
-   *      but if we return an IntList here, we crash
+   *      but if we return an IntArrayRef here, we crash
    *      because at::List doesn't make a copy of the underlying
    *      memory, and the constructor does not take an rvalue
    *      reference, so the move never happens. */
@@ -275,7 +275,7 @@ namespace
     std::tie (underlying_type, dimensions) = ascertain_underlying_type_and_dimensions (array_variant);
     std::reverse (dimensions.begin (), dimensions.end ());
 
-    torch::Tensor tensor = torch::zeros (torch::IntList (dimensions)).cpu ();
+    torch::Tensor tensor = torch::zeros (torch::IntArrayRef (dimensions)).cpu ();
     set_tensor_data_from_nested_variant_arrays (tensor, array_variant, underlying_type);
 
     return tensor;
@@ -380,7 +380,7 @@ scortch_local_tensor_set_dimensions (ScortchLocalTensor *local_tensor,
   /* We can't set the dimensions until the underlying tensor is constructed */
   if (priv->tensor != nullptr)
     {
-      priv->tensor->resize_ (torch::IntList (int_list_from_g_variant (priv->dimension_list)));
+      priv->tensor->resize_ (torch::IntArrayRef (int_list_from_g_variant (priv->dimension_list)));
     }
 }
 
@@ -553,7 +553,7 @@ scortch_local_tensor_constructed (GObject *object)
   ScortchLocalTensorPrivate *priv =
     static_cast <ScortchLocalTensorPrivate *> (scortch_local_tensor_get_instance_private (local_tensor));
 
-  priv->tensor = new torch::Tensor (torch::zeros (torch::IntList (int_list_from_g_variant (priv->dimension_list))));
+  priv->tensor = new torch::Tensor (torch::zeros (torch::IntArrayRef (int_list_from_g_variant (priv->dimension_list))));
 
   /* We need to wait until we have the tensor to set
    * its data from the construction parameters. */
