@@ -116,13 +116,13 @@ namespace
   class InvalidScalarTypeError : public std::logic_error
   {
     public:
-      InvalidScalarTypeError (torch::ScalarType const &scalar_type) :
+      InvalidScalarTypeError (caffe2::TypeMeta const &scalar_type) :
         std::logic_error::logic_error (InvalidScalarTypeError::format_error (scalar_type))
       {
       }
 
     private:
-      static inline std::string format_error (torch::ScalarType const &scalar_type)
+      static inline std::string format_error (caffe2::TypeMeta const &scalar_type)
       {
         std::stringstream ss;
         ss << "Cannot handle scalar type " << scalar_type;
@@ -130,33 +130,29 @@ namespace
       }
   };
 
-  GVariantType const * scalar_type_to_g_variant_type (torch::ScalarType scalar_type)
+  GVariantType const * scalar_type_to_g_variant_type (caffe2::TypeMeta scalar_type)
   {
-    switch (scalar_type)
-      {
-        /* XXX: We do not support float tensors
-         *      at the moment as GVariant doesn't
-         *      support floats. */
-        case torch::ScalarType::Double:
-          return G_VARIANT_TYPE_DOUBLE;
-        case torch::ScalarType::Long:
-          return G_VARIANT_TYPE_INT64;
-        default:
-          throw InvalidScalarTypeError (scalar_type);
-      }
+    /* XXX: We do not support float tensors
+     *      at the moment as GVariant doesn't
+     *      support floats. */
+    if (scalar_type == torch::kFloat64) {
+      return G_VARIANT_TYPE_DOUBLE;
+    } else if (scalar_type == torch::kInt64) {
+      return G_VARIANT_TYPE_INT64;
+    } else {
+      throw InvalidScalarTypeError (scalar_type);
+    }
   }
 
-  size_t scalar_type_to_element_size (torch::ScalarType scalar_type)
+  size_t scalar_type_to_element_size (caffe2::TypeMeta scalar_type)
   {
-    switch (scalar_type)
-      {
-        case torch::ScalarType::Double:
-          return sizeof (double);
-        case torch::ScalarType::Long:
-          return sizeof (int64_t);
-        default:
-          throw InvalidScalarTypeError (scalar_type);
-      }
+    if (scalar_type == torch::kFloat64) {
+      return sizeof (double);
+    } else if (scalar_type == torch::kInt64) {
+      return sizeof (int64_t);
+    } else {
+      throw InvalidScalarTypeError (scalar_type);
+    }
   }
 
   template <typename T>
